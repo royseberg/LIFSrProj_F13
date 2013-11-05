@@ -1,52 +1,6 @@
-// -------------------------------------------------------------------------------------------
-// Teensy3 I2C Master Test
-// 08Mar13 Brian (nox771 at gmail.com)
-// -------------------------------------------------------------------------------------------
-//
-// This creates an I2C master device which talks to the simple I2C slave device given in the
-// i2c_slave_t3 sketch.
-//
-// This code assumes the slave config has 256byte memory and I2C addr is 0x40.
-// The various tests are started by pulling one of the control pins low.
-//
-// This example code is in the public domain.
-//
-// -------------------------------------------------------------------------------------------
-// Slave protocol is as follows:
-// -------------------------------------------------------------------------------------------
-// WRITE - The I2C Master can write to the device by transmitting the WRITE command,
-//         a memory address to store to, and a sequence of data to store.
-//         The command sequence is:
-//
-// START|I2CADDR+W|WRITE|MEMADDR|DATA0|DATA1|DATA2|...|STOP
-//
-// where START     = I2C START sequence
-//       I2CADDR+W = I2C Slave address + I2C write flag
-//       WRITE     = WRITE command
-//       MEMADDR   = memory address to store data to
-//       DATAx     = data byte to store, multiple bytes are stored to increasing address
-//       STOP      = I2C STOP sequence
-// -------------------------------------------------------------------------------------------
-// READ - The I2C Master can read data from the device by transmitting the READ command,
-//        a memory address to read from, and then issuing a STOP/START or Repeated-START,
-//        followed by reading the data.  The command sequence is:
-//
-// START|I2CADDR+W|READ|MEMADDR|REPSTART|I2CADDR+R|DATA0|DATA1|DATA2|...|STOP
-//
-// where START     = I2C START sequence
-//       I2CADDR+W = I2C Slave address + I2C write flag
-//       READ      = READ command
-//       MEMADDR   = memory address to read data from
-//       REPSTART  = I2C Repeated-START sequence (or STOP/START if single Master)
-//       I2CADDR+R = I2C Slave address + I2C read flag
-//       DATAx     = data byte read by Master, multiple bytes are read from increasing address
-//       STOP      = I2C STOP sequence
-// -------------------------------------------------------------------------------------------
+
 
 #include <i2c_t3.h>
-#ifdef I2C_DEBUG
-    #include <rbuf.h> // linker fix
-#endif
 
 // Command definitions
 #define MCP4726_CMD_WRITEDAC            (0x40)  // Writes data to the DAC
@@ -93,9 +47,9 @@ void loop()
     Wire.beginTransmission(0x62); // slave addr
     writeValue(data);
     Serial.print(" ");
-    digitalWrite(13,HIGH);          // LED on
-    Wire.endTransmission();         // blocking I2C Tx (when not specified I2C_STOP is implicit)
-    digitalWrite(13,LOW);           // LED off
+    //digitalWrite(13,HIGH);          // LED on
+    //Wire.endTransmission();         // blocking I2C Tx (when not specified I2C_STOP is implicit)
+    //digitalWrite(13,LOW);           // LED off
     
     Serial.print("\r\n");
     print_i2c_status();             // print I2C final status
