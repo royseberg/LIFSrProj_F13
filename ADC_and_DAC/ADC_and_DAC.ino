@@ -52,7 +52,7 @@ void setup() {
 float volt;
 float v_ref=3.3;          // Reference Voltage, 5.0 Volt for LT1021 or 3.0 for LP2950-3
 const int dac_resolution = 0x0FFF;
-const int adc_resolution = 0x0FFFFFF;
+const long int adc_resolution = 0x0FFFFFF;
 
 long int ltw = 0;         // ADC Data ling int
 int cnt;                  // counter

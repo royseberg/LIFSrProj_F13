@@ -3,13 +3,12 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 class DataThread extends Thread {
   
-  private char[] cBuf = new char[512];
+  private int start = 170;
+  private int end = 85;
   
   private Serial serial;
   
   private PrintWriter output;
-  
-  private boolean running;
   
   public ConcurrentLinkedQueue<Float> data;
   
@@ -17,38 +16,32 @@ class DataThread extends Thread {
       this.serial = serial;
       output = createWriter(fileName);
       data = new ConcurrentLinkedQueue<Float>();
-      running = false;
+      serial.clear();
+      serial.write(0x00);
   }
   
-  public void start() {
-     running = true;
-     super.start();
-  }
   
   public void run() {
-    int size = 0;
-     while (running) {
-       char next = serial.readChar();
-       if (next == '\n' || size >= cBuf.length) {
-          createString(size);
-          size = 0;
-       } else if (next != -1 && next != '\r') {
-           cBuf[size++] = next;
-       }
-     } 
+    int value = 0;
+    int next = readSerial();
+    if (next == start) {
+      value = readSerial() << 8;
+      value = value | readSerial();
+      next = readSerial();
+      if (next == end) {
+        
+        float f = value * 0.0001875;
+        data.add(f);
+      }
+    }
   }
   
-  public void quit() {
-     running = false;
+  private int readSerial() {
+    int value = serial.read();
+    while (value < 0){
+      value = serial.read();
+    }
+    return (value & 0xff);
   }
-  
-  private void createString(int size) {
-     String string = new String(cBuf, 0, size);
-     output.println(string);
-     Long i = Long.parseLong(string, 16);
-     Float f = Float.intBitsToFloat(i.intValue());
-     data.add(f);
-  }
-  
-  
+    
 }

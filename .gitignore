@@ -11,3 +11,5 @@
 *.lai
 *.la
 *.a
+/PeptidesGUI/nbproject/private/
+/PeptidesGUI/build/

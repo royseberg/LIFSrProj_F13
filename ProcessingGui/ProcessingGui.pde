@@ -7,6 +7,8 @@ import org.gwoptics.graphics.graph2D.Graph2D;
 import org.gwoptics.graphics.graph2D.LabelPos;
 import org.gwoptics.graphics.graph2D.traces.*;
 
+import processing.serial.*;
+
 import org.gicentre.utils.move.*;
 
 private Graph2D g;
@@ -16,7 +18,7 @@ private Line2DTrace trace;
 
 
 private DataLine line;
-private TestDataThread dataThread;
+private DataThread dataThread;
 
 
 public class DataLine implements ILine2DEquation{
@@ -46,19 +48,20 @@ public class DataLine implements ILine2DEquation{
 void setup() {
    size(700,500);
    println(Serial.list());
-  dataThread = new TestDataThread();
-  dataThread.start();
-  dataThread.run();
   ScheduledExecutorService executor =
         Executors.newScheduledThreadPool(1);
+  Serial serial = new Serial(this, Serial.list()[2], 921600);
   
-  executor.scheduleAtFixedRate(dataThread, 100, 100, TimeUnit.MILLISECONDS);
+  dataThread = new DataThread(serial, "test.dat");
+  executor.scheduleAtFixedRate(dataThread, 1, 10, TimeUnit.MILLISECONDS);
   line = new DataLine(dataThread.data);
   trace = new Line2DTrace(line);
   
   trace.setTraceColour(255,0,0);
+  while (dataThread.data.size() < 10){
+     
+  }
   createGraph(trace);
-  
    
 }
 
