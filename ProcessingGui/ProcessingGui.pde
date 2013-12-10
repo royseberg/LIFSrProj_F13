@@ -2,6 +2,7 @@ import java.lang.Math;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.ArrayList;
 import java.util.Queue;
+import jssc.SerialPort;
 
 import org.gwoptics.graphics.graph2D.Graph2D;
 import org.gwoptics.graphics.graph2D.LabelPos;
@@ -11,82 +12,107 @@ import processing.serial.*;
 
 import org.gicentre.utils.move.*;
 
-private Graph2D g;
+private Graph2D g1;
+private Graph2D g2;
 
 private Queue<Float> data;
-private Line2DTrace trace;
+private Line2DTrace trace1;
+private Line2DTrace trace2;
 
 
-private DataLine line;
 private DataThread dataThread;
 
+private Serial serial;
 
-public class DataLine implements ILine2DEquation{
-  private ArrayList<Float> points;
-  private Queue<Float> newData;
-  
-  public DataLine(Queue<Float> data) {
-    points = new ArrayList<Float>();
-    newData = data;
-  }
-  
-  public double computePoint(double x, int toss) {
-    int pos = (int)x;
-    while (!newData.isEmpty()){
-      points.add(newData.poll()); 
-    }
-    if (pos > points.size()) return 0.0;
-    
-     return points.get(pos); 
-  }
-  
-  public int size(){
-    return points.size();
-  }
-}
-
+private PFont f;
 void setup() {
-   size(700,500);
+   size(1400,600);
    println(Serial.list());
-  ScheduledExecutorService executor =
-        Executors.newScheduledThreadPool(1);
-  Serial serial = new Serial(this, Serial.list()[2], 921600);
+  ExecutorService executor = Executors.newFixedThreadPool(1);
+  serial = new Serial(this, Serial.list()[2], 921600);
   
-  dataThread = new DataThread(serial, "test.dat");
-  executor.scheduleAtFixedRate(dataThread, 1, 10, TimeUnit.MILLISECONDS);
-  line = new DataLine(dataThread.data);
-  trace = new Line2DTrace(line);
+  int xSize = 600;
   
-  trace.setTraceColour(255,0,0);
-  while (dataThread.data.size() < 10){
-     
-  }
-  createGraph(trace);
+  DataLine line1 = new DataLine(xSize, 860, 2);
+  DataLine line2 = new DataLine(xSize, 860, 120);
+  
+  dataThread = new DataThread(serial, "test.dat", line1, line2);
+  executor.submit(dataThread);
+  
+  
+  trace1 = new Line2DTrace(line1);
+  trace1.setTraceColour(255,0,0);
+  g1 = new Graph2D(this, xSize, 400, false);
+  createGraph(g1, trace1, 70, 180);
+  
+  trace2 = new Line2DTrace(line2);
+  trace2.setTraceColour(255,0,0);
+  g2 = new Graph2D(this, xSize, 400, false);
+  createGraph(g2, trace2, 740, 180);
    
+  f = createFont("Arial",16,true);
 }
 
 void draw(){
   background(255);
-  int max = (int)g.getXAxis().getMaxValue();
-  if (max < line.size()) {
-    int size = line.size();
-     g.setXAxisMax(size-1);
-     g.setXAxisTickSpacing(size / 10); 
-     trace.generate();
-  }
-  g.draw();
+  int indent = 25;
+  trace1.generate();
+  trace2.generate();
+  g1.draw();
+  g2.draw();
+  
+  textFont(f);
+  fill(0);
+  text("Click in this applet and type the hex value to be sent to the teensy.  Type 'send' to send.", indent, 15);
+  text(typing,indent,90);
+  text(sent,indent,130);
 }
 
-private void createGraph(Line2DTrace trace) {
+private String typing = "";
+private String sent = "";
+private byte[] toSend;
+
+void keyPressed() {
+  // If the return key is pressed, save the String and clear it
+  if (key == '\n' ) {
+    if (typing.equals("send")) {
+      sent = "Sent 0x" + javax.xml.bind.DatatypeConverter.printHexBinary(toSend);
+      serial.write(toSend);
+      typing = "";
+      return;
+    }
+    String stripped = typing.replaceAll("[^a-fA-F0-9.]", "");
+    if (stripped.length() % 2 == 1) {
+       stripped = "0" + stripped; 
+    }
+    toSend = javax.xml.bind.DatatypeConverter.parseHexBinary(stripped);
+    sent = "Ready to send 0x" + javax.xml.bind.DatatypeConverter.printHexBinary(toSend);
+    typing = ""; 
+  } else if (key == '\b') {
+    if (typing.length() <= 0) return;
+    typing = typing.substring(0, typing.length()-1);
+  } else {
+    // Otherwise, concatenate the String
+    // Each character typed by the user is added to the end of the String variable.
+    typing = typing + key; 
+  }
+}
+
+
+void stop() {
+ dataThread.stopThread();
+ serial.stop();
+}
+
+private void createGraph(Graph2D g, Line2DTrace trace, int xPos, int yPos) {
   // Creating the Graph2D object:
-  // arguments are the parent object, xsize, ysize, cross axes at zero point
-  g = new Graph2D(this, 600, 400, false); 
+  // arguments are the parent object, xsize, ysize, cross axes at zero point 
   
   // Defining the main properties of the X and Y-Axis
-  g.setYAxisMin(-1);
-  g.setYAxisMax(1);
+  g.setYAxisMin(-.01);
+  g.setYAxisMax(5.2);
   g.setXAxisMin(0);
-  g.setXAxisMax(10);
+  g.setXAxisMax(600);
   g.setXAxisLabel("Sample");
   g.setYAxisLabel("Value");
   g.setXAxisTickSpacing(60);
@@ -95,11 +121,12 @@ private void createGraph(Line2DTrace trace) {
   // Offset of the top left corner of the plotting area
   // to the sketch origin (should not be zero in order to
   // see the y-axis label
-  g.position.x = 70;
-  g.position.y = 20;
+  g.position.x = xPos;
+  g.position.y = yPos;
  
   // Here we create a new trace and set a colour for
   // it, along with passing the equation object to it.
   // Adding the trace to the graph
   g.addTrace(trace);
 }
+

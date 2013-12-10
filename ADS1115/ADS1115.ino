@@ -21,10 +21,12 @@ union UADC
 void setup(void) 
 {
   Serial.begin(9600);
-  // Setup for Master mode, pins 18/19, external pullups, 400kHz
-  Wire.begin(I2C_MASTER, 0x00, I2C_PINS_18_19, I2C_PULLUP_EXT, I2C_RATE_400);  
-  data = 0x0;
+  // Setup for Master mode, pins 18/19, external pullups, 400kHz 
+  data = 0x1000;
   ads.begin();
+  // Setup for Master mode, pins 18/19, external pullups, 400kHz
+  Wire.begin(I2C_MASTER, 0x00, I2C_PINS_18_19, I2C_PULLUP_EXT, I2C_RATE_2400);  
+  writeValue(data);
 }
 
 byte dataArray[] = {0xAA, 0x00, 0x00, 0x55};
@@ -37,13 +39,13 @@ void loop(void)
   dataArray[1] = adc0.b[0];
   dataArray[2] = adc0.b[1];
   
-  Serial.write(dataArray, 4);
-  
-  data += 512-1;
-  if (data >= 4096) {
+  data += 1;
+  if (data >= 4095) {
     data = 0x0;
   }
   writeValue(data);
+  Serial.write(dataArray, 4);
+  
   
 }
 

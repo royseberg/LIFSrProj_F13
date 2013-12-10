@@ -1,47 +1,74 @@
-import processing.serial.*;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.lang.Runnable;
 
-class DataThread extends Thread {
-  
-  private int start = 170;
-  private int end = 85;
+
+class DataThread implements Runnable {
+  private int start = 0xAA;
+  private int end = 0x55;
   
   private Serial serial;
   
   private PrintWriter output;
   
-  public ConcurrentLinkedQueue<Float> data;
+  public DataLine[] _equations;
   
-  DataThread (Serial serial, String fileName) {
+  DataThread (Serial serial, String fileName, DataLine... data){
+    if (data == null || data.length == 0) throw new IllegalArgumentException("Must have a dataline to add data to");
       this.serial = serial;
       output = createWriter(fileName);
-      data = new ConcurrentLinkedQueue<Float>();
       serial.clear();
-      serial.write(0x00);
+      _running = true;
+      _equations = data;
   }
+  
+  int sampleCount;
+  private boolean _running;
   
   
   public void run() {
-    int value = 0;
-    int next = readSerial();
-    if (next == start) {
-      value = readSerial() << 8;
-      value = value | readSerial();
-      next = readSerial();
-      if (next == end) {
-        
-        float f = value * 0.0001875;
-        data.add(f);
+    try {
+      while (_running) {
+        int value = 0;
+        int next = readSerial();
+        if (next == start) {
+          value = readSerial();
+          value = (readSerial() << 8) | value;
+          next = readSerial();
+          if (next == end) {
+            
+            float f = value * .0001875;
+            output.println(value + "," + f);
+            for (DataLine eq : _equations) {
+              eq.addPoint(f);
+            }
+            if (sampleCount++ >= 100) {
+              output.flush();
+              sampleCount = 0;
+            }
+          }
+        }
       }
+    } catch (Exception e) {
+       println(e);
     }
+    output.flush();
+    output.close();
   }
   
+  public void stopThread() {
+    _running = false;
+  }
+  
+  private byte[] buffer = new byte[400];
+  private int available = 0;
+  private int next = 0;
+  
   private int readSerial() {
-    int value = serial.read();
-    while (value < 0){
-      value = serial.read();
+    while (available <= 0) {
+       available = serial.readBytes(buffer);
+      next = 0; 
     }
-    return (value & 0xff);
+    --available;
+    return (((int)buffer[next++]) & 0xff);
   }
     
 }
