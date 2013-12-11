@@ -17,7 +17,7 @@ public class DataLine implements ILine2DEquation{
   
   public double computePoint(double xValue, int position) {
     int pos = (int)xValue;
-    if (position >= _points.size()) return 0.0;
+    if (position >= _points.size()) return Float.NaN;
     float value = _points.get(position);
      return value; 
   }

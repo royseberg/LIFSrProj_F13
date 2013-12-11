@@ -3,11 +3,16 @@ import java.lang.Runnable;
 
 class DataThread implements Runnable {
   private int start = 0xAA;
+  private int stringStart = 's';
   private int end = 0x55;
+  private int stringEnd = 0xff;
   
   private Serial serial;
   
   private PrintWriter output;
+  
+  public String stringOut = "";
+  
   
   public DataLine[] _equations;
   
@@ -45,7 +50,12 @@ class DataThread implements Runnable {
               sampleCount = 0;
             }
           }
+        } else if (next == stringStart) {
+          String readString = serial.readStringUntil((char)0xff);
+          stringOut = readString == null ? "" : readString;
         }
+          
+          
       }
     } catch (Exception e) {
        println(e);

@@ -64,29 +64,26 @@ void draw(){
   textFont(f);
   fill(0);
   text("Click in this applet and type the hex value to be sent to the teensy.  Type 'send' to send.", indent, 15);
-  text(typing,indent,90);
-  text(sent,indent,130);
+  text(typing,indent,50);
+  text(message,indent,90);
+  text(dataThread.stringOut,indent,130);
 }
 
 private String typing = "";
+private String message = "";
 private String sent = "";
-private byte[] toSend;
 
 void keyPressed() {
   // If the return key is pressed, save the String and clear it
   if (key == '\n' ) {
     if (typing.equals("send")) {
-      sent = "Sent 0x" + javax.xml.bind.DatatypeConverter.printHexBinary(toSend);
-      serial.write(toSend);
+      message = "Sent: '" + sent + "'";
+      serial.write(sent);
       typing = "";
       return;
     }
-    String stripped = typing.replaceAll("[^a-fA-F0-9.]", "");
-    if (stripped.length() % 2 == 1) {
-       stripped = "0" + stripped; 
-    }
-    toSend = javax.xml.bind.DatatypeConverter.parseHexBinary(stripped);
-    sent = "Ready to send 0x" + javax.xml.bind.DatatypeConverter.printHexBinary(toSend);
+    sent = typing;
+    message = "Ready to send '" + typing + "'";
     typing = ""; 
   } else if (key == '\b') {
     if (typing.length() <= 0) return;
