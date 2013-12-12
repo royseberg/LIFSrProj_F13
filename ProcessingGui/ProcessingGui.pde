@@ -20,7 +20,8 @@ private Line2DTrace trace1;
 private Line2DTrace trace2;
 
 
-private DataThread dataThread;
+//private DataThread dataThread; // Comment when using the TestDataThread
+private TestDataThread dataThread; // Comment when using the real DataThread
 
 private Serial serial;
 
@@ -28,16 +29,19 @@ private PFont f;
 void setup() {
    size(1400,600);
    println(Serial.list());
-  ExecutorService executor = Executors.newFixedThreadPool(1);
-  serial = new Serial(this, Serial.list()[2], 921600);
+//  ExecutorService executor = Executors.newFixedThreadPool(1); // Comment when using the TestDataThread
+  ScheduledExecutorService executor = Executors.newScheduledThreadPool(1); // Comment when using the real DataThread
+//  serial = new Serial(this, Serial.list()[2], 921600); // Comment when using the TestDataThread
   
   int xSize = 600;
   
   DataLine line1 = new DataLine(xSize, 860, 2);
   DataLine line2 = new DataLine(xSize, 860, 120);
   
-  dataThread = new DataThread(serial, "test.dat", line1, line2);
-  executor.submit(dataThread);
+//  dataThread = new DataThread(serial, "test.dat", line1, line2); // Comment when using the TestDataThread
+  dataThread = new TestDataThread(line1, line2); // Comment when using the real DataThread
+//  executor.submit(dataThread); // Comment when using the TestDataThread
+  executor.scheduleAtFixedRate(dataThread, 100, 100, TimeUnit.MICROSECONDS); // Comment when using the real DataThread
   
   
   trace1 = new Line2DTrace(line1);
@@ -54,7 +58,7 @@ void setup() {
 }
 
 void draw(){
-  background(255);
+  background(150);
   int indent = 25;
   trace1.generate();
   trace2.generate();
@@ -66,7 +70,7 @@ void draw(){
   text("Click in this applet and type the hex value to be sent to the teensy.  Type 'send' to send.", indent, 15);
   text(typing,indent,50);
   text(message,indent,90);
-  text(dataThread.stringOut,indent,130);
+//  text(dataThread.stringOut,indent,130); // Comment when using the TestDataThread
 }
 
 private String typing = "";
@@ -97,8 +101,8 @@ void keyPressed() {
 
 
 void stop() {
- dataThread.stopThread();
- serial.stop();
+// dataThread.stopThread(); // Comment when using the TestDataThread
+// serial.stop(); // Comment when using the TestDataThread
 }
 
 private void createGraph(Graph2D g, Line2DTrace trace, int xPos, int yPos) {

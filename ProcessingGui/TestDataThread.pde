@@ -1,30 +1,26 @@
 import java.util.concurrent.*;
 
-  class TestDataThread extends Thread {
+  class TestDataThread implements Runnable {
   
   private boolean running;
   
-  public ConcurrentLinkedQueue<Float> data;
-  
   private int count;
   
-  TestDataThread () {
-      data = new ConcurrentLinkedQueue<Float>();
-      running = false;
+  private DataLine[] _data;
+  
+  TestDataThread (DataLine... data) {
+      _data = data;
+      running = true;
       count = 0;
   }
   
-  public void start() {
-     running = true;
-     super.start();
-  }
   
   public void run() {
     if (!running) return;
-    for (int i=0; i < 100; ++i, ++count) {
-      float next = (float)Math.cos((count/1000.0f));
-      data.add(next);
-    }
+      float next = (float)Math.cos((count++/1000.0f)) + 1;
+      for (DataLine line : _data) {
+        line.addPoint(next); 
+      }
   }
   
   public void quit() {

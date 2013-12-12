@@ -18,7 +18,10 @@ public class DataLine implements ILine2DEquation{
   public double computePoint(double xValue, int position) {
     int pos = (int)xValue;
     if (position >= _points.size()) return Float.NaN;
-    float value = _points.get(position);
+    float value;
+    synchronized(_points) {
+      value = _points.get(position);
+    }
      return value; 
   }
   
@@ -30,7 +33,9 @@ public class DataLine implements ILine2DEquation{
         _currentSample = 0;
         _points.add(value);
         if (_points.size() > _size) {
-          value = _points.poll();
+          synchronized(_points) {
+            value = _points.poll();
+          }
         }
         _average = 0.0;
      }

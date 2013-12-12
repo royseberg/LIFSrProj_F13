@@ -20,8 +20,8 @@ class DataThread implements Runnable {
     if (data == null || data.length == 0) throw new IllegalArgumentException("Must have a dataline to add data to");
       this.serial = serial;
       output = createWriter(fileName);
-      serial.clear();
-      _running = true;
+//      serial.clear();
+//      _running = true;
       _equations = data;
   }
   
