@@ -41,7 +41,7 @@ void setup() {
 //  dataThread = new DataThread(serial, "test.dat", line1, line2); // Comment when using the TestDataThread
   dataThread = new TestDataThread(line1, line2); // Comment when using the real DataThread
 //  executor.submit(dataThread); // Comment when using the TestDataThread
-  executor.scheduleAtFixedRate(dataThread, 100, 100, TimeUnit.MICROSECONDS); // Comment when using the real DataThread
+  executor.scheduleAtFixedRate(dataThread, 1212, 1212, TimeUnit.MICROSECONDS); // Comment when using the real DataThread
   
   
   trace1 = new Line2DTrace(line1);
