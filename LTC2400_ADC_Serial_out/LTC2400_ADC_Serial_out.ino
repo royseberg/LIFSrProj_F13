@@ -47,7 +47,7 @@ long int ltw = 0;         // ADC Data ling int
 int cnt;                  // counter
 byte b0, b1, b2, b3;                  //
 byte sig;                 // sign bit flag
-char st1[20];             // float voltage text
+char st1[20];             // float voltage text ---- What's this for? if commented out it appears to have no effect
 
 /********************************************************************/
 void loop() {
